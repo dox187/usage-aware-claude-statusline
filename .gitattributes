@@ -1,0 +1,7 @@
+# Keep LF line endings everywhere — the statusline is run on Linux/macOS/Windows
+# and statusline.py itself forces LF on stdout, so CRLF in the repo would only
+# cause noise and cross-platform breakage.
+* text=auto eol=lf
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf

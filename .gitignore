@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Local caches the statusline writes into ~/.claude (never the repo), kept here
+# only as a safety net in case someone runs it from inside the project dir.
+weather_cache.json
+usage_cache.json
+
+# Editor preview scratch files
+sl_preview_*.json
+
+# Secrets must never be committed
+.credentials.json
+
+# OS noise
+Thumbs.db
+.DS_Store
