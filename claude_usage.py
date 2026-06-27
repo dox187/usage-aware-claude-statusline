@@ -7,16 +7,27 @@ Usage:
 
 Token source, in order of precedence:
   1) CLAUDE_CODE_OAUTH_TOKEN env variable
-  2) ~/.claude/.credentials.json  (claudeAiOauth.accessToken)
+  2) macOS login Keychain ("Claude Code-credentials") — macOS only, auto-detected
+  3) ~/.claude/.credentials.json  (claudeAiOauth.accessToken) — Linux / headless
+
+On macOS we read the Keychain via /usr/bin/security; the Keychain sees this binary
+as the accessor (not python). Since the statusline is launched by Claude Code (a
+trusted app), it runs without a prompt. The token is NEVER written to a file.
 """
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
 
 URL = "https://api.anthropic.com/api/oauth/usage"
+KEYCHAIN_SERVICE = "Claude Code-credentials"
+# The usage endpoint expects Claude Code-like headers (a generic User-Agent
+# may trigger a 429). The version can be overridden via the CLAUDE_CODE_UA env variable.
+USER_AGENT = os.environ.get("CLAUDE_CODE_UA", "claude-code/2.0.0")
+ANTHROPIC_BETA = "oauth-2025-04-20"
 
 
 def token_from_credentials():
@@ -31,11 +42,41 @@ def token_from_credentials():
     return oauth.get("accessToken"), oauth.get("expiresAt")
 
 
+def token_from_keychain():
+    """(token, expires_at_ms) from the macOS login Keychain, or (None, None).
+
+    We invoke /usr/bin/security as a subprocess: the Keychain sees this binary
+    as the accessor (not python), and -w returns ONLY the secret to stdout.
+    Runs on macOS only; any error/rejection -> (None, None).
+    """
+    if sys.platform != "darwin":
+        return None, None
+    user = os.environ.get("USER") or os.environ.get("LOGNAME") or ""
+    cmd = ["/usr/bin/security", "find-generic-password", "-s", KEYCHAIN_SERVICE]
+    if user:
+        cmd += ["-a", user]
+    cmd += ["-w"]
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return None, None
+    if out.returncode != 0 or not out.stdout.strip():
+        return None, None
+    try:
+        oauth = json.loads(out.stdout).get("claudeAiOauth") or {}
+        return oauth.get("accessToken"), oauth.get("expiresAt")
+    except (ValueError, AttributeError):
+        return None, None
+
+
 def get_token():
     tok = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
     if tok:
         return tok
-    tok, _ = token_from_credentials()
+    tok, _ = token_from_keychain()      # macOS: login Keychain (auto-detected)
+    if tok:
+        return tok
+    tok, _ = token_from_credentials()   # Linux / headless-macOS fallback
     return tok
 
 
@@ -49,7 +90,8 @@ def fetch_usage(timeout=20):
         raise RuntimeError("No OAuth token (CLAUDE_CODE_OAUTH_TOKEN or credentials).")
     req = urllib.request.Request(URL, headers={
         "Authorization": f"Bearer {token}",
-        "User-Agent": "claude-cli/2.0",
+        "anthropic-beta": ANTHROPIC_BETA,
+        "User-Agent": USER_AGENT,
         "Accept": "application/json",
     })
     with urllib.request.urlopen(req, timeout=timeout) as resp:
