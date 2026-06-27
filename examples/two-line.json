@@ -1,0 +1,16 @@
+{
+  "emoji_width": 1,
+  "weather": { "name": "Lisbon", "show_name": true, "show_icon": true, "show_temp": true, "show_humidity": true, "show_wind": true },
+  "templates": {
+    "line1": "{sun} {c.time}[{time}]{r} {c.model}{model}{r}{c.effort}{effort}{r}  {c.ctx_label}Ctx{r} {c.ctx_percent}({ctx_percent}%){r}",
+    "line2": "{c.weather}{weather}{r}   {compact_usage_micro}"
+  },
+  "colors": {
+    "time": "#F5B945",
+    "model": "#E8688A",
+    "effort": "#C0A8FF",
+    "ctx_label": "#7A8290",
+    "ctx_percent": "#ffffff",
+    "weather": "#7FC8E0"
+  }
+}

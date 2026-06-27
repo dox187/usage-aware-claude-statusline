@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1086" height="143" viewBox="0 0 1086 143" font-family="'Agave Nerd Font','Agave NF','JetBrainsMono Nerd Font',ui-monospace,'Cascadia Code',Consolas,monospace" font-size="26">
+<rect width="1086" height="143" rx="14" fill="#0E1116"/>
+<text x="24" y="50.0" xml:space="preserve"><tspan fill="#a8c7e0">[17:11]</tspan><tspan fill="#C9D2DD"> </tspan><tspan fill="#6b7888">v2.0.14</tspan><tspan fill="#C9D2DD"> </tspan><tspan fill="#9fb8ff">Opus 4.8 (1M context)</tspan><tspan fill="#7fb4ff">(xhigh)</tspan><tspan fill="#C9D2DD"> Ctx:280.0k </tspan><tspan fill="#ffffff">(28%)</tspan></text>
+<text x="24" y="81.7" xml:space="preserve"><tspan fill="#89ddff">🌤️22.4°C</tspan><tspan fill="#C9D2DD">                              </tspan><tspan fill="#ffffff">▐</tspan><tspan fill="#98c379">███</tspan><tspan fill="#3e8e41">██</tspan><tspan fill="#e5c07b">█▏</tspan><tspan fill="#3a3a3a">░░░░░░░░░░░░░░░</tspan><tspan fill="#ffffff">▌</tspan></text>
+<text x="24" y="113.4" xml:space="preserve"><tspan fill="#82aaff">~\code\web-app</tspan><tspan fill="#C9D2DD"> </tspan><tspan fill="#5a6473">(git)/</tspan><tspan fill="#c3e88d">main</tspan><tspan fill="#C9D2DD"> (</tspan><tspan fill="#82aaff">+128</tspan><tspan fill="#C9D2DD">,</tspan><tspan fill="#ff8fa3">-37</tspan><tspan fill="#C9D2DD">)</tspan></text>
+</svg>

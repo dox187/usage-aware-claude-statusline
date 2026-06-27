@@ -1,0 +1,20 @@
+{
+  "emoji_width": 1,
+  "templates": {
+    "line1": "{c.time}[{time}]{r} {c.model}{model}{r}{c.effort}{effort}{r} Ctx:{ctx} {c.ctx_percent}({ctx_percent}%){r}",
+    "line2": "{c.path}{path}{r} {c.git_icon}(git)/{r}{c.branch}{branch}{r} ({c.output}+{added}{r},{c.input}-{removed}{r})",
+    "line3": "{usage_bars}",
+    "line4": "{usage_resets}"
+  },
+  "colors": {
+    "time": "#E5C07B",
+    "model": "#B8FF75",
+    "effort": "#61AFEF",
+    "ctx_percent": "#ffffff",
+    "path": "#98C379",
+    "git_icon": "#5A6473",
+    "branch": "#E5C07B",
+    "output": "#98C379",
+    "input": "#E06C75"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "emoji_width": 1,
+  "templates": {
+    "line1": "{c.model}{model}{r}  {c.ctx_label}Ctx{r} {c.ctx_value}{ctx}{r} {c.ctx_percent}({ctx_percent}%){r} {ctx_micro}"
+  },
+  "colors": {
+    "model": "#5BC0A8",
+    "ctx_label": "#7A8290",
+    "ctx_value": "#C9D2DD",
+    "ctx_percent": "#ffffff"
+  }
+}
