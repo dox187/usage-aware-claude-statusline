@@ -202,7 +202,7 @@ WEATHER_FLAGS = ("show_name", "show_icon", "show_temp", "show_humidity", "show_w
 DEFAULT_EMOJI_WIDTH = 2   # terminal columns per emoji (1 or 2); used for bar alignment
 
 DEFAULT_TEMPLATES = {
-    "line1": "{sun} {c.time}[{time}]{r} {c.version}{version}{r} {c.model}{model}{r}{c.effort}{effort}{r} {peak_label} Ctx:{ctx} {c.ctx_percent}({ctx_percent}%){r} {ctx_micro}",
+    "line1": "{sun} {c.time}[{time}]{r} {c.version}{version}{r} {c.model}{model}{r}{c.effort}{effort}{r} Ctx:{ctx} {c.ctx_percent}({ctx_percent}%){r} {ctx_micro}",
     "line2": "{c.weather}{weather}{r}  {usage_micro}",
     "line3": "{c.path}{path}{r} {c.git_icon}(git)/{r}{c.branch}{branch}{r} ({c.output}+{added}{r},{c.input}-{removed}{r}) ",
 }
