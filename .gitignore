@@ -16,6 +16,11 @@ sl_preview_*.json
 # Secrets must never be committed
 .credentials.json
 
+# Local statusline skill state (machine-specific; never commit)
+.claude/.statusline-active.json
+.statusline-config-history/
+**/.statusline-config-history/
+
 # OS noise
 Thumbs.db
 .DS_Store

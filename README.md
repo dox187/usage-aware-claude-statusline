@@ -14,6 +14,7 @@ Most Claude Code status lines show the model and a token count. This one puts yo
 - 🎯 **Context gauge with 1/8-cell precision.** `{ctx_bar}` uses Unicode eighth-blocks (`▏▎▍▌▋▊▉`) and recolors itself through token-usage bands (green → orange → red) as the window fills.
 - 🧩 **Fully template-driven.** Every line is a template string with placeholders and per-element colors, edited in `statusline_config.json` — no Python edits needed.
 - 🖥️ **Textual TUI editor.** Build lines from element chips, pick colors on a live spectrum, geocode a city, and see a **live preview** of the real bar before saving.
+- 💬 **Configure by chatting.** In-repo **skills** set up, theme, install, preview, and diagnose the bar in natural language — no JSON, no syntax. See [Skills](#skills).
 - 🪶 **Zero runtime dependencies.** The status line imports only the Python standard library; weather/usage use `urllib`. The editor is the only piece that needs a package (`textual`).
 - 🌍 **Cross-platform.** macOS, Linux, and Windows (with the documented forward-slash path rule).
 - ☀️ **Weather & sun, optional.** Live conditions via the free [Open-Meteo](https://open-meteo.com) API and a sunrise/sunset glyph — fetched **only** when a visible line actually uses `{weather}` or `{sun}`.
@@ -159,6 +160,10 @@ Session info, git, then the full **session + weekly** usage bars with their rese
 
 ## Install
 
+**Fastest — let a skill do it:** run **[`/statusline-install`](#skills)** in Claude Code. It detects your OS and `uv`/`python`, asks where to install, wires `settings.json` (handling the Windows path rule and a PowerShell wrapper when needed), sets up the token source, and verifies with a test render. The manual steps below are the same thing by hand.
+
+### Manual install
+
 1. **Place the files** in your Claude Code home so any project can use them:
 
    ```
@@ -181,7 +186,7 @@ Session info, git, then the full **session + weekly** usage bars with their rese
    - **macOS / Linux:** `uv run ~/.claude/statusline.py` (or `python3 ~/.claude/statusline.py`).
    - **Windows:** `uv run ~/.claude/statusline.py`. **Use forward slashes or `~`, never backslashes** — Claude Code runs the command through Git Bash (or PowerShell), and `C:\Users\…` gets mangled. The drive form `/c/Users/<you>/.claude/statusline.py` also works. With no Git Bash installed, use a PowerShell wrapper: `powershell -NoProfile -File C:/Users/<you>/.claude/statusline.ps1`.
 
-> A guided cross-platform installer is planned as a **skill** (OS + `uv`/`python` detection, run-location choice, `settings.json` wiring, token-source setup) — see [Skills](#skills-planned).
+> Prefer to do it by chatting? **[`/statusline-install`](#skills)** does all of the above and records which statusline is active so the other skills target it. See [Skills](#skills).
 
 ### Usage / rate-limit data (token source)
 
@@ -198,6 +203,8 @@ If no token is found, the usage segments simply render empty; the rest of the ba
 ## Configuration
 
 `statusline.py` reads **`statusline_config.json` from its own directory** (or the path in `STATUSLINE_CONFIG`). If the file is missing or invalid, built-in defaults are used so the bar always renders. Keys starting with `_` (e.g. `_comment`) are ignored.
+
+> **Prefer not to hand-edit JSON?** **[`/statusline-config`](#skills)** builds the layout for you and **[`/statusline-theme`](#skills)** handles all colors. Both show a diff, test-render, and write only on confirmation — and they **never blind-overwrite**: each change snapshots the previous config into `.statusline-config-history/` with a dated change log.
 
 ```jsonc
 {
@@ -258,17 +265,26 @@ python ~/.claude/statusline_editor.py
 
 A keyboard-driven Textual UI that edits `statusline_config.json` as rows of **element chips** (the raw `{c.NAME}…{r}` plumbing is hidden), with a 2D color picker, a city **geocoder**, and a **live preview** of the real bar from your unsaved changes. Nothing is written until **Ctrl+S**. Full key reference: [`statusline_editor_README.md`](statusline_editor_README.md).
 
+**Prefer chatting to a keyboard UI?** Everything the editor does is also available as **skills** you drive in natural language — `/statusline-config` for layout, `/statusline-theme` for colors, plus `/statusline-preview`, `/statusline-install`, and `/statusline-doctor`. Use whichever you like. See [Skills](#skills).
+
 ---
 
-## Skills (planned)
+## Skills
 
-> 🚧 **Roadmap.** These ship in-repo under `.claude/skills/` so you can configure the status line by *talking to Claude* — complementing (not replacing) the TUI editor.
+In-repo **skills** under `.claude/skills/` let you set up and maintain the bar by *talking to Claude* — a no-syntax alternative that complements the TUI editor. Invoke them in Claude Code by name:
 
-- **`config`** — guided multiple-choice setup: which lines/elements you want, usage display style, weather city (geocoded) and which parts, sun on/off, colors. Shows a diff and writes `statusline_config.json`.
-- **`theme`** — bundled popular palettes (Catppuccin, Dracula, Nord, Gruvbox, Tokyo Night, One Dark, Solarized, …); apply a whole palette, recolor specific elements, or snap existing colors to the nearest palette color.
-- **`install`** — cross-platform setup: detect OS + `uv`/`python`, choose where to run from, wire up `settings.json`, set the usage token source, and verify with a test render.
-- **`preview`** *(optional)* — render a config against sample input and export an **SVG** (the same pipeline that produced the screenshots above).
-- **`doctor`** *(optional)* — diagnose a blank bar: validate the config, check the token source, and test-render.
+| Skill | What it does |
+|---|---|
+| **`/statusline-config`** | Guided **layout** setup — which lines/elements, usage display style, context-gauge form, weather (city geocoded for you), `emoji_width`. Shows a diff, test-renders, and writes only on confirmation. *(Layout only — colors are `/statusline-theme`'s job.)* |
+| **`/statusline-theme`** | All **colors**. Apply a bundled palette (Catppuccin, Dracula, Nord, Gruvbox, Tokyo Night, One Dark, Solarized, Monokai, Rosé Pine, Everforest, Ayu), recolor specific elements ("make the branch green"), or snap your existing colors to the nearest palette color (CIEDE2000). Leaves the semantic gauge bands alone unless you opt in. |
+| **`/statusline-install`** | Cross-platform deploy — detect OS + `uv`/`python`, choose where to run from, wire `settings.json`, set the token source, and verify with a test render. |
+| **`/statusline-preview`** | Render a config against sample data and export an **SVG** screenshot (the pipeline behind the images above). |
+| **`/statusline-doctor`** | Diagnose a blank or wrong bar — validate the config, check the token source and runtime, sanity-check the `settings.json` command path (the Windows backslash trap), and test-render. |
+
+Two behaviors are shared across the skills:
+
+- **They target the *active* statusline.** Each skill resolves the statusline Claude Code is actually running — usually the deployed `~/.claude` copy, *not* the repo — from your `settings.json`, so edits land where they take effect. `/statusline-install` records this in a gitignored `.claude/.statusline-active.json` pointer for instant resolution next time.
+- **Writes are history-aware.** `/statusline-config` and `/statusline-theme` never blind-overwrite: before each change they snapshot the previous config to `.statusline-config-history/YYYYMMDD-hhmm.json` next to it and append a dated `YYYYMMDD.md` change log noting what changed and why. (Both paths are gitignored — per-machine state.)
 
 ---
 
@@ -277,8 +293,11 @@ A keyboard-driven Textual UI that edits `statusline_config.json` as rows of **el
 **How do I show token usage / cost in the Claude Code status line?**
 Use the `{usage_bars}`, `{usage_resets}`, and `{usage_micro}` placeholders, and make sure a token source is available (see [Usage data](#usage--rate-limit-data-token-source)).
 
+**How do I set it up without editing JSON?**
+Run `/statusline-config` (layout) and `/statusline-theme` (colors) in Claude Code — they show a diff and write only on confirmation — or use the TUI editor. To install/wire it, run `/statusline-install`; to debug a blank bar, `/statusline-doctor`. See [Skills](#skills).
+
 **The status line is blank on Windows.**
-Your `command` path almost certainly uses backslashes. Use forward slashes or `~` (e.g. `~/.claude/statusline.py` or `/c/Users/<you>/.claude/statusline.py`).
+Your `command` path almost certainly uses backslashes. Use forward slashes or `~` (e.g. `~/.claude/statusline.py` or `/c/Users/<you>/.claude/statusline.py`). `/statusline-doctor` checks this for you.
 
 **The context bar looks horizontally shifted.**
 Your terminal renders emoji single-width — set `"emoji_width": 1` in the config.
@@ -293,7 +312,7 @@ No — templates use the ASCII `(git)/` label plus standard emoji. You do need a
 
 ## How it compares
 
-Other Claude Code status lines (ccstatusline, claude-powerline, CCometixLine) focus on powerline segments and themes; `ccusage` reports usage separately. This project's niche is bringing **rate-limit / usage visualization into the bar itself**, with a dependency-free Python runtime and a visual TUI editor.
+Other Claude Code status lines (ccstatusline, claude-powerline, CCometixLine) focus on powerline segments and themes; `ccusage` reports usage separately. This project's niche is bringing **rate-limit / usage visualization into the bar itself**, with a dependency-free Python runtime, a visual TUI editor, and **configure-by-chat skills** (set up, theme, install, preview, and debug the bar in natural language).
 
 ---
 
@@ -305,5 +324,5 @@ Issues and PRs welcome. The repo is English-only (code, comments, docs). The sta
 
 [IDGAFPL](LICENSE.md) — the "I Don't Give A Fuck Public License." Do what the fuck you want.
 
-<!-- SEO: suggested GitHub topics — claude-code, claude-code-statusline, statusline, status-line, token-usage, rate-limit, context-window, anthropic, tui, textual, uv, ccusage-alternative -->
+<!-- SEO: suggested GitHub topics — claude-code, claude-code-statusline, claude-code-skills, agent-skills, statusline, status-line, token-usage, rate-limit, context-window, anthropic, tui, textual, uv, ccusage-alternative -->
 <!-- Screenshots are SVG (examples/*.svg), rendered from the real statusline.py with sample data; they use "Agave Nerd Font" with a generic monospace fallback. Swap to PNG if you want pixel-identical rendering everywhere. -->

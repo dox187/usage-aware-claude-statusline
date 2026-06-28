@@ -1,0 +1,16 @@
+{
+  "version": "2.0.14",
+  "model": { "display_name": "Opus 4.8" },
+  "effort": { "level": "high" },
+  "cwd": "C:/Users/you/projects/statusline",
+  "workspace": { "current_dir": "C:/Users/you/projects/statusline" },
+  "context_window": {
+    "context_window_size": 200000,
+    "used_percentage": 42,
+    "current_usage": {
+      "input_tokens": 18000, "output_tokens": 5200,
+      "cache_read_input_tokens": 50000, "cache_creation_input_tokens": 11000
+    },
+    "total_input_tokens": 220000, "total_output_tokens": 38000
+  }
+}

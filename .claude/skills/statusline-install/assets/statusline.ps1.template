@@ -1,0 +1,32 @@
+# Claude Code statusline wrapper (Windows, no Git Bash).
+# Claude Code pipes the session JSON to this script on stdin; we forward it
+# unchanged to the Python renderer and print whatever the renderer emits.
+#
+# Install: copy to C:/Users/<you>/.claude/statusline.ps1 (next to statusline.py),
+# then set settings.json statusLine.command to:
+#   powershell -NoProfile -File C:/Users/<you>/.claude/statusline.ps1
+#
+# Edit $Script below to point at your statusline.py, and switch the launcher
+# (uv vs python) to match what is installed. Forward slashes are fine here.
+
+$ErrorActionPreference = "Stop"
+
+# Force UTF-8 so emoji and box-drawing glyphs render correctly.
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::InputEncoding  = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
+
+# Absolute path to the renderer (edit to match your install location).
+$Script = "$env:USERPROFILE/.claude/statusline.py"
+
+# Read the entire stdin payload Claude Code sends.
+$payload = [Console]::In.ReadToEnd()
+
+# Launch the renderer with uv if available, else fall back to python.
+$uv = Get-Command uv -ErrorAction SilentlyContinue
+if ($uv) {
+    $payload | & uv run $Script
+} else {
+    $payload | & python $Script
+}

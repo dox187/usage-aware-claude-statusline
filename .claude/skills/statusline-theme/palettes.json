@@ -1,0 +1,95 @@
+{
+  "_comment": "Bundled color palettes for the statusline-theme skill. Each palette has 9 ROLES (text, muted, red, peach, yellow, green, sky, blue, mauve) as #RRGGBB. The 'apply palette' mode maps each statusline color KEY -> a ROLE using rolemap.json, then resolves the role to the hex below. Hex values were verified against each project's authoritative source. Some palettes have no distinct color for every role; in those cases the closest named color is reused (noted in _notes).",
+  "_notes": "Monokai has no separate blue (cyan #66d9ef serves sky+blue). Rose Pine: gold #f6c177 serves peach+yellow, foam #9ccfd8 serves sky+blue, pine #31748f is green. Solarized dark/light share the same accent hues; only text/muted differ. One Dark red uses the canonical Atom One Dark hue-5 (#e06c75).",
+
+  "catppuccin-latte": {
+    "_label": "Catppuccin Latte (light)",
+    "text": "#4c4f69", "muted": "#8c8fa1",
+    "red": "#d20f39", "peach": "#fe640b", "yellow": "#df8e1d", "green": "#40a02b",
+    "sky": "#04a5e5", "blue": "#1e66f5", "mauve": "#8839ef"
+  },
+  "catppuccin-frappe": {
+    "_label": "Catppuccin Frappe (dark)",
+    "text": "#c6d0f5", "muted": "#838ba7",
+    "red": "#e78284", "peach": "#ef9f76", "yellow": "#e5c890", "green": "#a6d189",
+    "sky": "#99d1db", "blue": "#8caaee", "mauve": "#ca9ee6"
+  },
+  "catppuccin-macchiato": {
+    "_label": "Catppuccin Macchiato (dark)",
+    "text": "#cad3f5", "muted": "#8087a2",
+    "red": "#ed8796", "peach": "#f5a97f", "yellow": "#eed49f", "green": "#a6da95",
+    "sky": "#91d7e3", "blue": "#8aadf4", "mauve": "#c6a0f6"
+  },
+  "catppuccin-mocha": {
+    "_label": "Catppuccin Mocha (dark)",
+    "text": "#cdd6f4", "muted": "#7f849c",
+    "red": "#f38ba8", "peach": "#fab387", "yellow": "#f9e2af", "green": "#a6e3a1",
+    "sky": "#89dceb", "blue": "#89b4fa", "mauve": "#cba6f7"
+  },
+  "dracula": {
+    "_label": "Dracula (dark)",
+    "text": "#f8f8f2", "muted": "#6272a4",
+    "red": "#ff5555", "peach": "#ffb86c", "yellow": "#f1fa8c", "green": "#50fa7b",
+    "sky": "#8be9fd", "blue": "#bd93f9", "mauve": "#ff79c6"
+  },
+  "nord": {
+    "_label": "Nord (dark)",
+    "text": "#eceff4", "muted": "#4c566a",
+    "red": "#bf616a", "peach": "#d08770", "yellow": "#ebcb8b", "green": "#a3be8c",
+    "sky": "#88c0d0", "blue": "#81a1c1", "mauve": "#b48ead"
+  },
+  "gruvbox-dark": {
+    "_label": "Gruvbox Dark",
+    "text": "#ebdbb2", "muted": "#928374",
+    "red": "#fb4934", "peach": "#fe8019", "yellow": "#fabd2f", "green": "#b8bb26",
+    "sky": "#8ec07c", "blue": "#83a598", "mauve": "#d3869b"
+  },
+  "tokyo-night": {
+    "_label": "Tokyo Night (Storm)",
+    "text": "#c0caf5", "muted": "#565f89",
+    "red": "#f7768e", "peach": "#ff9e64", "yellow": "#e0af68", "green": "#9ece6a",
+    "sky": "#7dcfff", "blue": "#7aa2f7", "mauve": "#bb9af7"
+  },
+  "one-dark": {
+    "_label": "One Dark (Atom)",
+    "text": "#abb2bf", "muted": "#5c6370",
+    "red": "#e06c75", "peach": "#d19a66", "yellow": "#e5c07b", "green": "#98c379",
+    "sky": "#56b6c2", "blue": "#61afef", "mauve": "#c678dd"
+  },
+  "solarized-dark": {
+    "_label": "Solarized Dark",
+    "text": "#839496", "muted": "#586e75",
+    "red": "#dc322f", "peach": "#cb4b16", "yellow": "#b58900", "green": "#859900",
+    "sky": "#2aa198", "blue": "#268bd2", "mauve": "#6c71c4"
+  },
+  "solarized-light": {
+    "_label": "Solarized Light",
+    "text": "#657b83", "muted": "#93a1a1",
+    "red": "#dc322f", "peach": "#cb4b16", "yellow": "#b58900", "green": "#859900",
+    "sky": "#2aa198", "blue": "#268bd2", "mauve": "#6c71c4"
+  },
+  "monokai": {
+    "_label": "Monokai (classic)",
+    "text": "#f8f8f2", "muted": "#75715e",
+    "red": "#f92672", "peach": "#fd971f", "yellow": "#e6db74", "green": "#a6e22e",
+    "sky": "#66d9ef", "blue": "#66d9ef", "mauve": "#ae81ff"
+  },
+  "rose-pine": {
+    "_label": "Rose Pine (main)",
+    "text": "#e0def4", "muted": "#6e6a86",
+    "red": "#eb6f92", "peach": "#f6c177", "yellow": "#f6c177", "green": "#31748f",
+    "sky": "#9ccfd8", "blue": "#9ccfd8", "mauve": "#c4a7e7"
+  },
+  "everforest-dark": {
+    "_label": "Everforest Dark (medium)",
+    "text": "#d3c6aa", "muted": "#859289",
+    "red": "#e67e80", "peach": "#e69875", "yellow": "#dbbc7f", "green": "#a7c080",
+    "sky": "#83c092", "blue": "#7fbbb3", "mauve": "#d699b6"
+  },
+  "ayu-dark": {
+    "_label": "Ayu Dark",
+    "text": "#bfbdb6", "muted": "#636a72",
+    "red": "#f07178", "peach": "#ff8f40", "yellow": "#ffb454", "green": "#aad94c",
+    "sky": "#95e6cb", "blue": "#59c2ff", "mauve": "#d2a6ff"
+  }
+}

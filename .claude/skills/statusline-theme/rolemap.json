@@ -1,0 +1,50 @@
+{
+  "_comment": "KEY -> ROLE mapping used by the statusline-theme skill's 'apply palette' mode. Each statusline color KEY (left) is assigned a palette ROLE (right); the role is then looked up in the chosen palette (palettes.json) to get the final #RRGGBB. Roles are the 9 palette names: text, muted, red, peach, yellow, green, sky, blue, mauve. Only NON-SEMANTIC keys appear here. The SEMANTIC context/usage band keys (ctx_bar, ctx_bar_mid, ctx_bar_high, ctx_bar_crit, ctx_bar_max, ctx_bar_track) are DELIBERATELY ABSENT from 'roles' below: they encode severity green->red and MUST NOT be recolored unless the user explicitly opts in. The optional opt-in mapping for them is under 'bands_optin'.",
+
+  "roles": {
+    "time": "yellow",
+    "version": "muted",
+    "model": "red",
+    "effort": "blue",
+
+    "ctx_label": "muted",
+    "ctx_value": "muted",
+    "ctx_icon": "muted",
+    "model_icon": "muted",
+    "total_icon": "muted",
+    "git_icon": "muted",
+    "bracket": "muted",
+    "separator": "muted",
+    "cached_icon": "muted",
+
+    "ctx_percent": "text",
+    "ctx_bracket": "text",
+
+    "total": "green",
+    "input": "red",
+    "output": "blue",
+    "cached": "mauve",
+
+    "path": "blue",
+    "branch": "yellow",
+    "git_status": "yellow",
+    "changes": "yellow",
+
+    "weather": "sky",
+    "peak": "red",
+    "offpeak": "green",
+    "offpeak_warn": "peach",
+    "usd": "green"
+  },
+
+  "_bands_optin_comment": "APPLY THESE ONLY when the user EXPLICITLY asks to theme the severity bands (e.g. 'also theme the gauge bands to match'). By default leave all six band keys untouched at their statusline.py defaults so the green->red severity ramp stays consistent across themes.",
+  "bands_optin": {
+    "ctx_bar": "green",
+    "ctx_bar_mid": "green",
+    "ctx_bar_high": "peach",
+    "ctx_bar_crit": "red",
+    "ctx_bar_max": "red",
+    "ctx_bar_track": "muted"
+  },
+  "_bands_optin_note": "ctx_bar_high maps to peach (orange-ish) by default; yellow is an acceptable alternative if the palette's peach reads too red. ctx_bar and ctx_bar_mid both map to green (mid is normally a darker green, but most palettes expose only one green role)."
+}
