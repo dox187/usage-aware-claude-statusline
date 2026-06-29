@@ -5,6 +5,14 @@ file that drives `statusline.py`. Manage template lines, insert/parameterize
 placeholders, pick colors with a live swatch, tweak settings, and see a **live
 preview** of the real statusline before saving.
 
+![The Statusline Config Editor on the Lines tab: template lines rendered as colored element chips, a context-sensitive key legend, and a live preview of the real statusline pinned at the bottom](examples/editor-lines.svg)
+
+*Lines tab — template lines as colored element chips, with a live preview of the real bar pinned at the bottom.*
+
+![The Statusline Config Editor on the Settings tab, scrolled to the STATUS section with its incident-indicator toggles and values](examples/editor-settings.svg)
+
+*Settings tab — keyboard-driven settings, here scrolled to the STATUS section (the Claude status-page incident indicator).*
+
 ## Install & run
 
 ```bash

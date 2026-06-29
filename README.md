@@ -8,6 +8,22 @@ Most Claude Code status lines show the model and a token count. This one puts yo
 
 ---
 
+## Contents
+
+- [Why this one?](#why-this-one)
+- [Examples](#examples)
+- [Requirements](#requirements)
+- [Install](#install)
+- [Configuration](#configuration)
+- [The TUI editor](#the-tui-editor)
+- [Skills](#skills)
+- [Troubleshooting / FAQ](#troubleshooting--faq)
+- [How it compares](#how-it-compares)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
 ## Why this one?
 
 - 📊 **Usage-first.** Not just a token count — `{usage_bars}` / `{usage_resets}` render your **session and weekly rate-limit windows** as sized gauges with **reset-time countdowns**, and `{usage_micro}` packs them into one compact line.
@@ -222,8 +238,29 @@ A bold banner over the active-incident line. Both lines live entirely in the con
    ~/.claude/statusline.py
    ~/.claude/statusline_config.json     # your layout + weather location + colors
    ~/.claude/claude_usage.py            # usage/rate-limit fetcher (used by {usage_*})
+   ~/.claude/claude_status.py           # status-page incident fetcher (used by {status*})
    ~/.claude/statusline_editor.py       # optional TUI editor
    ```
+
+Copying is optional. Two other ways:
+
+- **Point `settings.json` at your clone.** Set `statusLine.command` to the `statusline.py` inside your clone instead of `~/.claude` — same block shape as step 2, just a different path:
+
+  ```json
+  {
+    "statusLine": {
+      "type": "command",
+      "command": "uv run ~/repos/usage-aware-claude-statusline/statusline.py",
+      "padding": 0
+    }
+  }
+  ```
+
+- **Ask Claude to install it.** Paste a prompt like this into Claude Code:
+
+  ```text
+  Set up this status line in my Claude Code: https://github.com/dox187/usage-aware-claude-statusline — clone the repo, put the files in ~/.claude, and add the statusLine block to my settings.json.
+  ```
 
 2. **Wire it into Claude Code** with a `statusLine` block in your `settings.json`:
 
