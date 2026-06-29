@@ -15,11 +15,25 @@
     "show_humidity": true,
     "show_wind": true
   },
+  "status": {
+    "_comment": "Claude status-page incident indicator. Renders the SINGLE most-recent ACTIVE incident from status.claude.com's RSS feed via {status} ({status:N} caps the label+title at N chars, 0 = unlimited, like {ctx_bar:N}; {status_icon} = emoji only). Only incidents updated within max_age_hours (default 48; 0 = no limit) count, so stale incidents drop off. {status_header} is a bold, status_header-colored banner showing the `title` text (put any emoji/ascii right in the title; a leading emoji is auto-spaced from the words) shown ONLY when something is active - put it on its own line ABOVE {status} for a 2-line block that appears/disappears together (show_header=false suppresses it). Cached in ~/.claude/status_cache.json (conditional GET); the network is touched only when a line uses one of these placeholders. show_* pick which pieces of the incident line appear; '(+N)' hints at other active incidents. Everything is empty (its line hidden) when nothing is active. include_maintenance also surfaces scheduled / in-progress maintenance.",
+    "show_icon": true,
+    "show_label": true,
+    "show_title": true,
+    "show_count": true,
+    "show_header": true,
+    "include_maintenance": false,
+    "max_len": 48,
+    "max_age_hours": 48,
+    "title": "⚠️ Claude have some issues"
+  },
   "templates": {
-    "_comment": "Available placeholders: {c.COLORNAME} apply color, {r} reset, {time} {version} {model} {effort} {ctx} {ctx_percent} {ctx_bar} {align_pad} {total} {input} {output} {cached} {path} {branch} {added} {removed} {weather} {sun} {peak_label}. Bare {ctx_bar} auto-sizes/positions to align line2's gauge with the line1 segment from {effort} to end-of-line; put {align_pad} right before it for the leading spaces. Use {ctx_bar:N} for a FIXED N-cell bar (e.g. {ctx_bar:30}, no {align_pad} needed). Eighth-block precision either way. Lines are printed in order; remove a line to hide it.",
+    "_comment": "Available placeholders: {c.COLORNAME} apply color, {r} reset, {time} {version} {model} {effort} {ctx} {ctx_percent} {ctx_bar} {align_pad} {total} {input} {output} {cached} {path} {branch} {added} {removed} {weather} {sun} {peak_label} {status} {status:N} {status_icon} {status_header}. {status} shows the latest active incident within max_age_hours (capped at status.max_len chars); {status:N} caps it at N chars for this line (0 = unlimited), like {ctx_bar:N}. {status_header} is the bold banner; both are empty (line hidden) when nothing is active. Bare {ctx_bar} auto-sizes/positions to align line2's gauge with the line1 segment from {effort} to end-of-line; put {align_pad} right before it for the leading spaces. Use {ctx_bar:N} for a FIXED N-cell bar (e.g. {ctx_bar:30}, no {align_pad} needed). Eighth-block precision either way. Lines are printed in order; remove a line to hide it. A line that renders empty (e.g. {status} when nothing is broken) is skipped entirely.",
     "line1": "{sun} {c.time}[{time}]{r} {c.version}{version}{r} {c.model}{model}{r}{c.effort}{effort}{r} Ctx:{ctx} {c.ctx_percent}({ctx_percent}%){r} {ctx_micro}",
     "line2": "{c.weather}{weather}{r}  {compact_usage_micro}",
     "line3": "{c.path}{path}{r} {c.git_icon}(git)/{r}{c.branch}{branch}{r} ({c.output}+{added}{r},{c.input}-{removed}{r}) ",
+    "_disabled_status_header": "{status_header}",
+    "_disabled_status_line": "{status}",
     "_disabled_ctx_bar_line": "{c.weather}{weather}{r}{align_pad}{c.ctx_bracket}▐{r}{ctx_bar}{c.ctx_bracket}▌{r}",
     "_disabled_usage_bars": "{usage_bars}",
     "_disabled_usage_resets": "{usage_resets}",
@@ -56,6 +70,14 @@
     "effort": "#61AFEF",
     "ctx_bar": "#98C379",
     "ctx_bar_track": "#3a3a3a",
-    "ctx_bracket": "#ffffff"
+    "ctx_bracket": "#ffffff",
+    "status_investigating": "#E67E22",
+    "status_identified": "#E06C75",
+    "status_monitoring": "#61AFEF",
+    "status_maintenance": "#56B6C2",
+    "status_default": "#E5C07B",
+    "status_title": "#c0c0c0",
+    "status_count": "#717171",
+    "status_header": "#E06C75"
   }
 }

@@ -45,6 +45,10 @@ REQUIREMENTS
                  if neither is used, no weather request is ever made. Results are
                  cached in ~/.claude/weather_cache.json for 10 minutes; offline
                  it falls back to the stale cache, then to a blank weather line.
+                 The {status} / {status_icon} placeholders likewise fetch the
+                 status.claude.com incident feed (via claude_status.py), but ONLY
+                 when used; results are cached in ~/.claude/status_cache.json with
+                 a conditional GET and fall back to the stale cache when offline.
   - Terminal     Needs 24-bit truecolor and an emoji-capable Unicode font.
                  Nerd Fonts are NOT required (templates use the ASCII "(git)/"
                  label plus standard emoji).
@@ -88,7 +92,7 @@ CONFIG FILE (statusline_config.json)
     {c.NAME} apply a COLORS color   {r} reset
     {time} {version} {model} {effort}     {sun} {weather} {peak_label}
     {ctx} {ctx_percent} {ctx_bar} {align_pad}   {path} {branch} {added} {removed}
-    {total} {input} {output} {cached}
+    {total} {input} {output} {cached}      {status} {status:N} {status_icon} {status_header}
 
   {ctx_bar} draws a context-usage gauge; the trailing cell uses Unicode
   eighth-blocks (▏▎▍▌▋▊▉) so the fill is accurate to 1/8 of a cell. The bar
@@ -165,6 +169,17 @@ COLORS = {
     "ctx_bar_max":  "#FF2A2A",   # 500K+    intense red
     "ctx_bar_track":"#3a3a3a",
     "ctx_bracket":  "#ffffff",
+
+    # Claude status-page incident indicator ({status} / {status_icon}). The icon
+    # + status word are colored by the incident's status; the title is neutral.
+    "status_investigating": "#E67E22",   # orange
+    "status_identified":    "#E06C75",   # red
+    "status_monitoring":    "#61AFEF",   # blue
+    "status_maintenance":   "#56B6C2",   # teal (scheduled / in-progress maintenance)
+    "status_default":       "#E5C07B",   # gold (update / unknown)
+    "status_title":         "#c0c0c0",   # incident title (neutral gray)
+    "status_count":         "#717171",   # "(+N more)" suffix
+    "status_header":        "#E06C75",   # the bold {status_header} banner (model red)
 }
 
 # ============================================
@@ -184,6 +199,14 @@ COLORS = {
 #   {align_pad} - spaces that align line2's bar under the line1 segment
 #   {total}, {input}, {output}, {cached}
 #   {path}, {branch}, {added}, {removed}, {weather}, {sun}, {peak_label}
+#   {status} / {status:N} - most-recent active status.claude.com incident
+#       (empty when none); {status:N} caps the label+title at N chars (0 = no
+#       limit), overriding status.max_len for that line - like {ctx_bar:N}.
+#       Only incidents updated within status.max_age_hours (default 48h) count.
+#   {status_icon} - just that incident's status emoji
+#   {status_header} - bold colored banner (status.title) shown only when an
+#       incident is active; put it on its own line ABOVE {status} for a 2-line
+#       block that appears/disappears together with the incident
 # ============================================
 # Config path: next to this script, unless STATUSLINE_CONFIG overrides it (used
 # by the TUI editor to preview an unsaved config without touching the real file).
@@ -201,6 +224,24 @@ DEFAULT_WEATHER = {
 WEATHER_FLAGS = ("show_name", "show_icon", "show_temp", "show_humidity", "show_wind")
 DEFAULT_EMOJI_WIDTH = 2   # terminal columns per emoji (1 or 2); used for bar alignment
 
+# Claude status-page incident indicator. Mirrors the "weather" block: a set of
+# show_* flags pick which pieces of the {status} string appear. Fetched (and its
+# result cached) ONLY when an active line uses {status} or {status_icon}.
+DEFAULT_STATUS = {
+    "show_icon": True,            # status emoji (🔍 investigating, 👀 monitoring, ...)
+    "show_label": True,           # the status word ("Investigating", "Monitoring")
+    "show_title": True,           # the incident title
+    "show_count": True,           # "(+N)" suffix when more than one incident is active
+    "show_header": True,          # render the {status_header} banner when something is active
+    "include_maintenance": False, # also show scheduled / in-progress maintenance
+    "max_len": 48,                # truncate the label+title to this many chars (0 = no limit)
+    "max_age_hours": 48,          # hide incidents whose last update is older than this (0 = no limit)
+    "title": "⚠️ Claude have some issues",  # the {status_header} banner text (put any emoji/ascii right in it)
+}
+# The boolean show_* flags inside the "status" block (string/number fields handled separately).
+STATUS_FLAGS = ("show_icon", "show_label", "show_title", "show_count", "show_header",
+                "include_maintenance")
+
 DEFAULT_TEMPLATES = {
     "line1": "{sun} {c.time}[{time}]{r} {c.version}{version}{r} {c.model}{model}{r}{c.effort}{effort}{r} Ctx:{ctx} {c.ctx_percent}({ctx_percent}%){r} {ctx_micro}",
     "line2": "{c.weather}{weather}{r}  {usage_micro}",
@@ -214,13 +255,14 @@ def load_config():
     status line keeps working even if the config file is absent or broken.
     Keys starting with '_' (e.g. '_comment') are ignored.
 
-    Returns (weather, templates, emoji_width).
+    Returns (weather, templates, emoji_width, colors, bar_empty, status).
     """
     weather = dict(DEFAULT_WEATHER)
     templates = dict(DEFAULT_TEMPLATES)
     emoji_width = DEFAULT_EMOJI_WIDTH
     colors = {}
     bar_empty = BAR_EMPTY
+    status = dict(DEFAULT_STATUS)
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             cfg = json.load(f)
@@ -250,9 +292,21 @@ def load_config():
         be = cfg.get("ctx_bar_empty")
         if isinstance(be, str) and be != "":
             bar_empty = be
+        # Status-page incident indicator config (same shape idea as weather).
+        s = cfg.get("status", {})
+        if isinstance(s, dict):
+            for k in STATUS_FLAGS:
+                if k in s:
+                    status[k] = bool(s[k])
+            if isinstance(s.get("max_len"), int):
+                status["max_len"] = s["max_len"]
+            if isinstance(s.get("max_age_hours"), (int, float)):
+                status["max_age_hours"] = s["max_age_hours"]
+            if isinstance(s.get("title"), str):
+                status["title"] = s["title"]
     except Exception:
         pass
-    return weather, templates, emoji_width, colors, bar_empty
+    return weather, templates, emoji_width, colors, bar_empty, status
 
 # ============================================
 # HELPER FUNCTIONS
@@ -308,6 +362,40 @@ def display_width(s, emoji_width=2):
             width += 1
         i += 1
     return width
+
+# Code points we treat as a leading "emoji/pictographic symbol" for auto-spacing:
+# the emoji planes plus the BMP symbol/arrow/dingbat blocks (covers ⚠ ☀ ✅ ⏳ ➡ ...).
+def _is_emoji_lead(ch, nxt):
+    o = ord(ch)
+    if nxt and ord(nxt) == 0xFE0F:               # base + VS16 -> emoji presentation
+        return True
+    return o >= 0x1F000 or 0x2190 <= o <= 0x2BFF
+
+def pad_leading_emoji(text, emoji_width=2):
+    """Ensure a leading emoji is separated from the following text.
+
+    If `text` starts with an emoji/symbol glyph, normalize the gap after it to a
+    single space (or two when the emoji renders 2 columns wide), so the icon
+    never visually merges with the words - even if the config text put no space
+    after it. Text without a leading emoji is returned unchanged."""
+    if not isinstance(text, str) or not text:
+        return text
+    s = text.lstrip()
+    if not s:
+        return text
+    nxt = s[1] if len(s) > 1 else ""
+    if not _is_emoji_lead(s[0], nxt):
+        return text
+    # Consume the emoji grapheme: base char + an optional VS16 selector.
+    i = 1
+    if i < len(s) and ord(s[i]) == 0xFE0F:
+        i += 1
+    emoji = s[:i]
+    rest = s[i:].lstrip()
+    if not rest:
+        return emoji
+    sep = "  " if display_width(emoji, emoji_width) >= 2 else " "
+    return f"{emoji}{sep}{rest}"
 
 class ColorAccessor:
     """Enables {c.color_name} syntax in templates"""
@@ -771,6 +859,166 @@ def build_usage_micro(usage, c, compact=False):
             + seg("week", "w", week.get("utilization") or 0, week.get("resets_at", "")))
 
 
+# ============================================
+# CLAUDE STATUS-PAGE INCIDENTS ({status} / {status_icon})
+# Data comes from claude_status.get_incidents() (the status.claude.com history
+# RSS feed). Cached on disk + conditional-GET refreshed, so renders stay fast
+# and the network is only touched when {status}/{status_icon} is actually used.
+# Only CURRENTLY ACTIVE incidents are shown; resolved ones drop off on their own
+# because the feed always carries each incident's latest update.
+# ============================================
+STATUS_CACHE = os.path.join(os.path.expanduser("~"), ".claude", "status_cache.json")
+STATUS_TTL = 120  # seconds; incidents move slowly and 304s make refreshes cheap
+
+# Normalized status -> COLORS key used to color the icon + status word.
+STATUS_COLOR_KEYS = {
+    "investigating": "status_investigating",
+    "identified":    "status_identified",
+    "monitoring":    "status_monitoring",
+    "verifying":     "status_monitoring",
+    "scheduled":     "status_maintenance",
+    "in progress":   "status_maintenance",
+    "update":        "status_default",
+}
+
+def get_status():
+    """Return the list of parsed incident dicts (cached), or [] on any failure.
+
+    Delegates fetching + on-disk caching + conditional GET to the sibling
+    claude_status.py module, mirroring how get_usage() uses claude_usage.py."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import claude_status
+        return claude_status.get_incidents(cache_path=STATUS_CACHE, ttl=STATUS_TTL, timeout=5)
+    except Exception:
+        return []
+
+def format_status(incidents, c, flags=None, emoji_width=DEFAULT_EMOJI_WIDTH,
+                  max_len=None):
+    """Build the colored {status} string from the active incidents + show_* flags.
+
+    Shows a SINGLE incident (the most recent active one) so the line never grows;
+    a "(+N)" suffix hints at any others. Returns "" when nothing is active, so the
+    line is hidden. Each piece is colored by the incident's status, so the
+    indicator reads red/orange/blue at a glance.
+
+    max_len caps the label+title length (… elides the rest); when None it falls
+    back to flags["max_len"] (config) and then to 48. This is what the template
+    format spec feeds in, so {status:80} overrides the config just like {ctx_bar:N}."""
+    flags = flags or {}
+    def on(key, default=True):
+        return bool(flags.get(key, default))
+
+    try:
+        import claude_status
+        active = claude_status.active_incidents(
+            incidents, include_maintenance=on("include_maintenance", False),
+            max_age_hours=flags.get("max_age_hours"))
+    except Exception:
+        active = []
+
+    if not active:
+        return ""
+
+    top = active[0]
+    status = top.get("status", "update")
+    color = getattr(c, STATUS_COLOR_KEYS.get(status, "status_default"))
+    title_color = getattr(c, "status_title")
+
+    # Build the plain label/title first, truncate, THEN color, so max_len counts
+    # visible characters (not ANSI escapes). icon + status word take the status
+    # color; the title is neutral gray.
+    label = top.get("label", "") if on("show_label") else ""
+    title = top.get("title", "") if on("show_title") else ""
+    if max_len is None:
+        max_len = flags.get("max_len", 48)
+    if isinstance(max_len, int) and max_len > 0:
+        joined_len = len(label) + (3 if label and title else 0) + len(title)
+        if joined_len > max_len and title:
+            keep = max(1, max_len - len(label) - (3 if label else 0) - 1)
+            title = title[:keep].rstrip() + "…"
+
+    if label and title:
+        text = f"{color}{label}{RESET} {title_color}— {title}{RESET}"
+    elif label:
+        text = f"{color}{label}{RESET}"
+    elif title:
+        text = f"{title_color}{title}{RESET}"
+    else:
+        text = ""
+
+    emoji = top.get("emoji", "") if on("show_icon") else ""
+    if emoji and text:
+        # A 2-column-wide emoji renders flush against the next glyph in many
+        # terminals, so pad it with an extra space; a 1-wide icon keeps one.
+        sep = "  " if display_width(emoji, emoji_width) >= 2 else " "
+        out = f"{color}{emoji}{RESET}{sep}{text}"
+    elif emoji:
+        out = f"{color}{emoji}{RESET}"
+    else:
+        out = text
+    if on("show_count") and len(active) > 1:
+        out += f" {getattr(c, 'status_count')}(+{len(active) - 1}){RESET}"
+    return out
+
+def status_active(incidents, flags):
+    """The currently-active incidents after the show/age filters (feed order)."""
+    try:
+        import claude_status
+        return claude_status.active_incidents(
+            incidents, include_maintenance=bool(flags.get("include_maintenance")),
+            max_age_hours=flags.get("max_age_hours"))
+    except Exception:
+        return []
+
+def format_status_header(active, c, flags=None, emoji_width=DEFAULT_EMOJI_WIDTH):
+    """The bold {status_header} banner shown ABOVE the incident line(s).
+
+    Returns "" (so its template line is hidden) when nothing is active or when
+    show_header is off. Otherwise the config `title`, bold, in the status_header
+    color. Put any emoji/ascii right in the title text (e.g. '⚠️ CLAUDE-STATUS');
+    a leading emoji is auto-spaced from the words so it never runs into them."""
+    flags = flags or {}
+    if not active or not bool(flags.get("show_header", True)):
+        return ""
+    title = pad_leading_emoji(str(flags.get("title", "")), emoji_width)
+    if not title:
+        return ""
+    return f"{BOLD}{getattr(c, 'status_header')}{title}{RESET}"
+
+class StatusField:
+    """Template value for {status}: the active-incident indicator, with a
+    template-driven max length just like the {ctx_bar:N} progress bar.
+
+        {status}     -> uses status.max_len from the config (then the 48 default)
+        {status:80}  -> caps the label+title at 80 visible characters
+        {status:0}   -> no length limit (show the whole title)
+
+    The format spec wins over the config value, mirroring ProgressBar.__format__.
+    Rendering is deferred to __format__ so the bar/field is only built once the
+    template asks for it (and at the spec'd width)."""
+    def __init__(self, incidents, c, flags, emoji_width):
+        self.incidents = incidents
+        self.c = c
+        self.flags = flags
+        self.emoji_width = emoji_width
+
+    def _render(self, max_len):
+        return format_status(self.incidents, self.c, self.flags,
+                             self.emoji_width, max_len=max_len)
+
+    def __format__(self, spec):
+        max_len = None
+        if spec:
+            try:
+                max_len = int(spec)
+            except ValueError:
+                max_len = None
+        return self._render(max_len)
+
+    def __str__(self):
+        return self._render(None)
+
 def get_peak_label(c):
     """
     Determine if current Budapest time is peak or off-peak.
@@ -913,7 +1161,7 @@ def main():
     c = ColorAccessor()
 
     # External config: weather location, templates, emoji width, colors, bar glyph
-    weather_cfg, templates, emoji_width, color_overrides, bar_empty = load_config()
+    weather_cfg, templates, emoji_width, color_overrides, bar_empty, status_cfg = load_config()
     # Apply color overrides over the COLORS defaults (missing keys keep defaults).
     COLORS.update(color_overrides)
 
@@ -982,6 +1230,26 @@ def main():
         if need_sun:
             sun_icon = get_sun_icon(raw.get("sunrise", ""), raw.get("sunset", ""))
 
+    # Claude status-page incident indicator. Like weather, only hit the network
+    # (claude_status -> status.claude.com RSS) when an active line uses {status},
+    # {status:N} or {status_icon}; otherwise it costs nothing. The "{status"
+    # prefix catches all three forms.
+    need_status = "{status" in tpl_text
+    status_str, status_icon, status_header = "", "", ""
+    if need_status:
+        incidents = get_status()
+        # A field object so the template can size it: {status} uses the config
+        # max_len, {status:N} overrides it (mirrors {ctx_bar:N}).
+        status_str = StatusField(incidents, c, status_cfg, emoji_width)
+        # Active set after the maintenance + 48h-age filters; drives the header
+        # and the icon-only placeholder so all three stay consistent.
+        act = status_active(incidents, status_cfg)
+        status_header = format_status_header(act, c, status_cfg, emoji_width)
+        if act:
+            top = act[0]
+            icon_color = getattr(c, STATUS_COLOR_KEYS.get(top.get("status", "update"), "status_default"))
+            status_icon = f"{icon_color}{top.get('emoji', '')}{RESET}"
+
     # Reasoning effort (live session value, e.g. high/xhigh/max).
     # Wrapped in parens here so the template stays empty when unsupported.
     effort_level = get_effort(data)
@@ -1030,6 +1298,9 @@ def main():
         "weather": weather,
         "sun": sun_icon,
         "peak_label": peak_label,
+        "status": status_str,
+        "status_icon": status_icon,
+        "status_header": status_header,
     }
 
     # Usage data: fetched once here, reused for the big bars + micro lines below.
