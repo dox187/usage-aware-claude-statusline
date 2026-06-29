@@ -2,11 +2,12 @@
 name: statusline-config
 description: >
   Guided LAYOUT setup for the usage-aware Claude Code statusline — decides WHAT the bar
-  shows (which lines/elements, usage display style, context gauge form, weather, emoji
-  width) by chatting, complementing the TUI editor. Invoke when the user says things like
-  "set up the statusline", "configure my statusline", "change which lines/elements show",
-  "add weather to the bar", "show usage in the statusline", "switch to a compact usage
-  display", "hide the git line", or "configure the context gauge". This skill does NOT
+  shows (which lines/elements, usage display style, context gauge form, weather, incident
+  status indicator, emoji width) by chatting, complementing the TUI editor. Invoke when
+  the user says things like "set up the statusline", "configure my statusline", "change
+  which lines/elements show", "add weather to the bar", "show usage in the statusline",
+  "switch to a compact usage display", "hide the git line", "configure the context gauge",
+  "show Claude status in the bar", or "add an incident indicator". This skill does NOT
   change colors — colors are owned by /statusline-theme; route any color/theme request
   there instead.
 ---
@@ -70,12 +71,15 @@ what is currently active**:
 
 - Which `templates` keys start with `line` (those are ON, in order) vs `_disabled_*`/`_*`
   (those are OFF).
-- Which element blocks each active line contains (session header / weather / git / usage).
+- Which element blocks each active line contains (session header / weather / git / usage /
+  status incident indicator).
 - Which usage style is in use, if any (`{usage_bars}`+`{usage_resets}` / `{usage_micro}` /
   `{compact_usage_micro}` / none).
 - Which context-gauge form is in use (`{ctx_micro}` inline / bare `{ctx_bar}` / `{ctx_bar:N}`
   / just `{ctx}`/`{ctx_percent}`).
 - `emoji_width`, and weather `name` + `show_*` flags.
+- Whether a `status` block is present and whether any active line uses a status placeholder
+  (`{status}`, `{status:N}`, `{status_icon}`, `{status_header}`).
 
 ---
 
@@ -103,7 +107,9 @@ file — copy them verbatim when a preset is chosen.
 ### Custom rounds (only if the user picked "customize")
 Ask in clear, separate rounds:
 
-1. **Element blocks** (`multiSelect`): `session header`, `weather`, `git`, `usage`.
+1. **Element blocks** (`multiSelect`): `session header`, `weather`, `git`, `usage`,
+   `status` (incident indicator — zero-cost when nothing is active; the whole line is
+   suppressed automatically).
 2. **Usage style** (single select — pick at most ONE, never mix):
    - **Full bars (2 lines)** — `{usage_bars}` on one line, `{usage_resets}` on the next.
      Most detail; costs two lines.
@@ -158,9 +164,14 @@ Tokens:        {total} {input} {output} {cached}
 Usage gauges:  {usage_bars} {usage_resets} {usage_micro} {compact_usage_micro}
 Path/git:      {path} {branch} {added} {removed}
 Weather:       {weather} {sun}
+Status:        {status} {status:N} {status_icon} {status_header}
 ```
 
 `{effort}` renders like `(high)` or empty when unsupported. Do **not** use `{peak_label}`.
+
+`{status:N}` caps the label+title at N characters (0 = unlimited), exactly like `{ctx_bar:N}`.
+All four status placeholders render **empty** (and suppress their whole line) when no incident
+is active — the RSS feed is fetched only when a rendered line actually uses one of them.
 
 ### Fragment recipes (module → fragment)
 
@@ -174,6 +185,9 @@ Weather:       {weather} {sun}
 | usage micro line | `{usage_micro}` |
 | usage compact line | `{compact_usage_micro}` |
 | weather + compact usage on one line | `{c.weather}{weather}{r}  {compact_usage_micro}` |
+| status indicator | `{status}` (or `{status:N}` to cap width) |
+| status icon only | `{status_icon}` |
+| status header banner | `{status_header}` — on its OWN line, ABOVE the line containing `{status}`; appears only when an incident is active |
 
 If the user chose the inline-micro gauge **and** no `{sun}` glyph, drop the leading `{sun} `
 from the header. Include `{sun}` only when the user opted into it.
@@ -203,6 +217,20 @@ A config must use **at most one** of these. Never combine (a)+(b), (b)+(c), etc.
 Order lines sensibly: **header → weather/usage → git** (gauge line usually right after the
 header). Assign active lines as `line1`, `line2`, … in display order.
 
+**Status incident lines** follow a special rule: `{status_header}` MUST appear on its OWN
+line placed ABOVE the line that contains `{status}`. Both lines vanish together when no
+incident is active. The shipped config already contains a ready-to-enable pair — enable both
+by renaming them from `_disabled_*` to `line*` keys:
+
+```json
+"_disabled_status_header": "{status_header}",
+"_disabled_status_line":   "{status}"
+```
+
+Rename `_disabled_status_header` to `line_status_header` (or similar) and
+`_disabled_status_line` to `line_status` — or insert them as `line2`/`line3` etc. in the
+display order. Never place `{status_header}` on the same line as `{status}`.
+
 To turn OFF an existing line **without deleting it**, rename its key to `_disabled_<name>`
 (keys not starting with `line` are ignored). **Preserve every existing `_comment*` key.**
 Do **NOT** alter the `colors` block.
@@ -229,6 +257,11 @@ Before rendering, check ALL of:
   that bar line contains `{align_pad}`.
 - If any active line uses `{weather}` or `{sun}`, the `weather` block has a geocoded
   `name`/`latitude`/`longitude` (not the default placeholder).
+- If any active line uses `{status}`, `{status:N}`, `{status_icon}`, or `{status_header}`:
+  no special config is required (the `status` block has sensible defaults and is optional);
+  the RSS fetch happens only when these placeholders appear in a rendered line. If
+  `{status_header}` is used, confirm it is on a separate line placed ABOVE the line
+  containing `{status}`.
 - `colors` block is byte-for-byte unchanged; `_comment*` keys preserved.
 
 Fix any failure before proceeding.
@@ -355,3 +388,40 @@ geocoded city)
   "line4": "{usage_resets}"
 }
 ```
+
+---
+
+## Status config block
+
+The `status` block is **optional** — if absent, all status placeholders use these defaults.
+Add or edit the block to override specific keys; the rest remain at their defaults.
+
+```json
+"status": {
+  "show_icon":             true,   // show the incident emoji in {status}
+  "show_label":            true,   // show the status label (Investigating / Identified / Monitoring …)
+  "show_title":            true,   // show the incident title text
+  "show_count":            true,   // show "(+N)" hint when multiple incidents are active
+  "show_header":           true,   // allow {status_header} to render
+  "include_maintenance":   false,  // also surface scheduled / in-progress maintenance events
+  "max_len":               48,     // global char cap for {status} (0 = unlimited)
+  "max_age_hours":         48,     // only incidents updated within this many hours count (0 = no limit)
+  "title": "⚠️ Claude have some issues"  // banner text shown by {status_header}
+}
+```
+
+**Key notes:**
+
+- `max_len` is the global cap for `{status}`; `{status:N}` overrides it per-line (0 = unlimited
+  for that line).
+- `include_maintenance: false` (default) hides scheduled/in-progress maintenance events; set
+  to `true` to surface them alongside incidents.
+- `max_age_hours: 0` disables the age filter — every parsed incident counts regardless of
+  when it was last updated.
+- A leading emoji in `title` is auto-spaced from the words; no manual spacing needed.
+- The `status` block does **not** live inside `colors` — it is a sibling of `templates`,
+  `weather`, and `emoji_width`.
+- Color keys for the status indicator (`status_investigating`, `status_identified`,
+  `status_monitoring`, `status_maintenance`, `status_default`, `status_title`,
+  `status_count`, `status_header`) live in the `colors` block and are owned by
+  `/statusline-theme`; do not touch them here.

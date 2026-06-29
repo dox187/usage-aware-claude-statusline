@@ -9,6 +9,7 @@ venv/
 # only as a safety net in case someone runs it from inside the project dir.
 weather_cache.json
 usage_cache.json
+status_cache.json
 
 # Editor preview scratch files
 sl_preview_*.json

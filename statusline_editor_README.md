@@ -25,10 +25,15 @@ straight to the list you're looking at.
 ## Tabs
 
 - **Lines** — each line is a row of **element chips**. An element is a placeholder
-  (e.g. `ctx`, `usage_micro`) or a bit of literal text, and it carries its own
-  **color** — the raw `{c.NAME}...{r}` plumbing is hidden. Spaces show as `·`, the
-  selected element is highlighted. Fully keyboard-driven (a context-sensitive key
-  legend showing only what's available now sits right under the lines):
+  (e.g. `ctx`, `usage_micro`, `status`, `status_icon`, `status_header`) or a bit of
+  literal text, and it carries its own **color** — the raw `{c.NAME}...{r}` plumbing
+  is hidden. Spaces show as `·`, the selected element is highlighted. Fully
+  keyboard-driven (a context-sensitive key legend showing only what's available now
+  sits right under the lines):
+
+  `{status}` accepts an optional fixed-width N param (same UI as `ctx_bar`: press
+  `E` / `Enter` on the chip to set it, giving `{status:N}`). `{status_icon}` and
+  `{status_header}` take no param.
 
   | Key | Action |
   |-----|--------|
@@ -59,6 +64,10 @@ straight to the list you're looking at.
     (pick from the matches if there are several), and five **show_\*** toggles that
     pick which parts of the `{weather}` string appear — city name, weather icon,
     temperature, humidity, wind.
+  - **Status**: `show_icon`, `show_label`, `show_title`, `show_count`, `show_header`
+    toggles; `include_maintenance` toggle; `max_len` and `max_age_hours` numeric
+    fields; `title` text field (the bold banner text for `{status_header}`). These
+    drive whether and how `{status}` and `{status_header}` render.
   - **General**: `emoji_width` (1 or 2), `ctx_bar_empty` glyph.
   - **Preview sample**: context `%` and model name — these change only the live
     preview, never the saved config.

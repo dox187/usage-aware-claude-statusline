@@ -106,8 +106,11 @@ DATA_PLACEHOLDERS = [
     ("{removed}", "git -lines"),
     ("{weather}", "weather text"),
     ("{sun}", "sun/moon icon"),
+    ("{status}", "Claude status incident (param: max chars N)"),
+    ("{status_icon}", "Claude status emoji only"),
+    ("{status_header}", "bold status banner (config: status.title)"),
 ]
-PARAM_BASES = {"ctx_bar"}
+PARAM_BASES = {"ctx_bar", "status"}
 
 GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 
@@ -171,6 +174,16 @@ SETTINGS_SPEC = [
     {"kind": "bool",   "key": ("weather", "show_temp"),  "label": "Show temperature",   "default": True},
     {"kind": "bool",   "key": ("weather", "show_humidity"), "label": "Show humidity",   "default": True},
     {"kind": "bool",   "key": ("weather", "show_wind"),  "label": "Show wind",          "default": True},
+    {"kind": "section", "label": "STATUS"},
+    {"kind": "bool",   "key": ("status", "show_icon"),   "label": "Show incident icon", "default": True},
+    {"kind": "bool",   "key": ("status", "show_label"),  "label": "Show status label",  "default": True},
+    {"kind": "bool",   "key": ("status", "show_title"),  "label": "Show incident title", "default": True},
+    {"kind": "bool",   "key": ("status", "show_count"),  "label": "Show (+N) count",    "default": True},
+    {"kind": "bool",   "key": ("status", "show_header"), "label": "Allow status header", "default": True},
+    {"kind": "bool",   "key": ("status", "include_maintenance"), "label": "Include maintenance", "default": False},
+    {"kind": "int",    "key": ("status", "max_len"),     "label": "Max chars (0 = no cap)", "default": 48, "min": 0},
+    {"kind": "int",    "key": ("status", "max_age_hours"), "label": "Max age hours (0 = no limit)", "default": 48, "min": 0},
+    {"kind": "text",   "key": ("status", "title"),       "label": "Header banner text", "default": "⚠️ Claude have some issues"},
     {"kind": "section", "label": "GENERAL"},
     {"kind": "int",    "key": ("emoji_width",),          "label": "Emoji width (1 or 2)", "default": 2, "min": 1, "max": 2},
     {"kind": "text",   "key": ("ctx_bar_empty",),        "label": "Context-bar empty glyph", "default": "░", "maxlen": 1, "nonempty": True},

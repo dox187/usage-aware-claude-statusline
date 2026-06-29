@@ -1,0 +1,39 @@
+{
+  "emoji_width": 1,
+  "status": {
+    "show_icon": true,
+    "show_label": true,
+    "show_title": true,
+    "show_count": true,
+    "show_header": true,
+    "include_maintenance": false,
+    "max_len": 48,
+    "max_age_hours": 48,
+    "title": "⚠️ Claude have some issues"
+  },
+  "templates": {
+    "line1": "{status_header}",
+    "line2": "{status}",
+    "line3": "{c.time}[{time}]{r} {c.model}{model}{r}{c.effort}{effort}{r} Ctx:{ctx} {c.ctx_percent}({ctx_percent}%){r}",
+    "line4": "{c.path}{path}{r} {c.git_icon}(git)/{r}{c.branch}{branch}{r} ({c.output}+{added}{r},{c.input}-{removed}{r})"
+  },
+  "colors": {
+    "time": "#E5C07B",
+    "model": "#B8FF75",
+    "effort": "#61AFEF",
+    "ctx_percent": "#ffffff",
+    "path": "#98C379",
+    "git_icon": "#5A6473",
+    "branch": "#E5C07B",
+    "output": "#98C379",
+    "input": "#E06C75",
+    "status_investigating": "#E67E22",
+    "status_identified": "#E06C75",
+    "status_monitoring": "#61AFEF",
+    "status_maintenance": "#56B6C2",
+    "status_default": "#E5C07B",
+    "status_title": "#c0c0c0",
+    "status_count": "#717171",
+    "status_header": "#E06C75"
+  }
+}

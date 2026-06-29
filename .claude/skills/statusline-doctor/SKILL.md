@@ -185,12 +185,16 @@ Known placeholders (the complete set — there is no other):
 - Usage gauges: `{usage_bars}` `{usage_resets}` `{usage_micro}` `{compact_usage_micro}`
 - Path / git: `{path}` `{branch}` `{added}` `{removed}`
 - Weather: `{weather}` `{sun}`
+- Status: `{status}` `{status:N}` (N = integer char cap, 0 = unlimited) `{status_icon}`
+  `{status_header}`
 - Legacy (back-compat only — do **not** suggest adding it): `{peak_label}`
 
 Notes while scanning:
 
 - `{ctx_bar:N}` with a numeric `N` is valid (fixed-width bar). `{ctx_bar:foo}` (non-numeric
   spec) is tolerated by the code (falls back to a default width) but is sloppy — mention it.
+- `{status:N}` with a numeric `N` is valid (char cap for that line). `{status:foo}`
+  (non-numeric spec) is sloppy — mention it.
 - A bare `{c.something_not_in_colors}` does not crash (unknown color keys resolve to white),
   but flag it as "color key not recognized — will render white".
 - Common typos that DO crash the whole bar (they aren't keys in the values dict):
@@ -382,6 +386,7 @@ Then explain **why** each empty segment is empty — most "broken" segments are 
 | `{usage_*}` | No OAuth token (Check 6) or no network → usage data unavailable → renders empty. Not a bug. |
 | `{branch}` / `{added}` / `{removed}` | If the cwd is not a git repo, **any line that contains `{branch}` is replaced by the bare path** — it does not matter what else is on that line, so `{added}`/`{removed}` and any surrounding text on that line disappear too. The sample `cwd` is not a real git repo, so this is expected. Not a bug. |
 | `{effort}` | Empty when the model doesn't support effort; the sample sets `high`, so it should show `(high)`. |
+| `{status}` / `{status_icon}` / `{status_header}` | No active incidents currently reported on the Claude status page, or the RSS fetch failed (falls back to `[]`). Both outcomes render the placeholder empty and the entire line is hidden — this is correct behavior, not a bug. |
 | Whole line missing | A line that renders to only whitespace/color codes is intentionally skipped (so usage/weather lines vanish when they're empty). |
 
 If the test-render produces a full colored line but the user's real bar is blank, the

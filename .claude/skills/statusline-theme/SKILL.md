@@ -31,6 +31,13 @@ Code statusline. You handle three jobs:
    severity ramp shared by the context gauge AND the usage gauges; recoloring
    them silently would break the meaning. When in doubt, leave them out and say
    so.
+   Likewise, **never recolor the SEMANTIC status/incident keys** —
+   `status_investigating`, `status_identified`, `status_monitoring`,
+   `status_maintenance`, `status_default`, `status_title`, `status_count`,
+   `status_header` — unless the user explicitly opts in ("also theme the incident
+   colors", "recolor the status indicator too"). These encode Claude service
+   incident severity and have universally understood meaning; recoloring them
+   silently would make the statusline misleading.
 2. **Confirm before writing.** Always: resolve the ACTIVE config (Step 0) ->
    read it -> compute new colors -> show BEFORE/AFTER swatches + a diff ->
    test-render -> get explicit confirmation -> only THEN commit (via the helper's
@@ -105,6 +112,11 @@ prefer to confirm the real path.
   ctx_value, ctx_percent, ctx_icon, model_icon, total_icon, total, bracket,
   input, separator, output, cached_icon, cached, path, git_icon, branch,
   git_status, changes, weather, ctx_bracket`.
+- The **status/incident color keys** (`status_investigating`, `status_identified`,
+  `status_monitoring`, `status_maintenance`, `status_default`, `status_title`,
+  `status_count`, `status_header`) are semantic and excluded from automatic
+  palette application. They may only be set on explicit user opt-in (see Hard
+  rule 1 and Mode A).
 - The user's config may only define a subset of these. When applying a palette,
   set the keys the rolemap covers that are already present, plus any the user
   asks for. Don't invent keys the user never had unless they explicitly want a
@@ -157,7 +169,14 @@ Accept fuzzy names: "catppuccin" -> ask which flavor (default mocha); "solarized
    apply `rolemap.json` -> `bands_optin` (ctx_bar/ctx_bar_mid -> green,
    ctx_bar_high -> peach, ctx_bar_crit/ctx_bar_max -> red, ctx_bar_track ->
    muted). Otherwise say "leaving the severity bands at their defaults".
-5. Preview, validate, test-render, confirm, commit (history-aware, see "Writing
+5. **Status opt-in:** only if the user explicitly asked to theme the incident/
+   status colors ("also theme the incident colors", "recolor the status
+   indicator too"), also apply `rolemap.json` -> `status_optin`
+   (status_investigating -> peach, status_identified/status_header -> red,
+   status_monitoring -> blue, status_maintenance -> sky, status_default ->
+   yellow, status_title/status_count -> muted). Otherwise say "leaving the
+   incident severity colors at their defaults".
+6. Preview, validate, test-render, confirm, commit (history-aware, see "Writing
    the result").
 
 Mapping reference (authoritative copy is `rolemap.json`):
@@ -186,8 +205,17 @@ The user names one or more elements and a color each ("make branch green",
    - "context %"/"ctx percent" -> `ctx_percent`. "brackets" -> `bracket` (and/or
      `ctx_bracket` — ask). "input/output/cached tokens" -> `input`/`output`/
      `cached`. "total" -> `total`.
-   - If the named element is one of the **band keys**, STOP and confirm the
-     opt-in first, because that overrides the severity ramp.
+   - "status indicator"/"incident indicator"/"investigating color" ->
+     `status_investigating`; "identified color" -> `status_identified`;
+     "monitoring color" -> `status_monitoring`; "maintenance color" ->
+     `status_maintenance`; "status default color" -> `status_default`;
+     "status title color" -> `status_title`; "status count color" ->
+     `status_count`; "status banner"/"incident banner"/"status header" ->
+     `status_header`. When the user says "recolor the status/incident colors"
+     without specifying a severity, ask which states they want to change (or
+     offer to apply the full `status_optin` palette mapping).
+   - If the named element is one of the **band keys** or **status/incident keys**,
+     STOP and confirm the opt-in first, because that overrides the severity ramp.
 2. Resolve the requested color:
    - A hex (`#rrggbb` or `#rgb`): use it (normalize via `colorutil.hex_to_rgb`/
      `rgb_to_hex`).
@@ -228,8 +256,9 @@ chosen palette.
    cur = json.load(open("<config_path>")).get("colors", {})
    roles = [v for k, v in pal["nord"].items() if not k.startswith("_")]
    bands = {"ctx_bar","ctx_bar_mid","ctx_bar_high","ctx_bar_crit","ctx_bar_max","ctx_bar_track"}
+   status = {"status_investigating","status_identified","status_monitoring","status_maintenance","status_default","status_title","status_count","status_header"}
    for key, hexv in cur.items():
-       if key.startswith("_") or key in bands:   # never snap band keys by default
+       if key.startswith("_") or key in bands or key in status:   # never snap band or status keys by default
            continue
        try:
            best, de = colorutil.nearest_color(hexv, roles)

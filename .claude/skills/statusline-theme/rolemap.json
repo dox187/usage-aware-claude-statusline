@@ -46,5 +46,18 @@
     "ctx_bar_max": "red",
     "ctx_bar_track": "muted"
   },
-  "_bands_optin_note": "ctx_bar_high maps to peach (orange-ish) by default; yellow is an acceptable alternative if the palette's peach reads too red. ctx_bar and ctx_bar_mid both map to green (mid is normally a darker green, but most palettes expose only one green role)."
+  "_bands_optin_note": "ctx_bar_high maps to peach (orange-ish) by default; yellow is an acceptable alternative if the palette's peach reads too red. ctx_bar and ctx_bar_mid both map to green (mid is normally a darker green, but most palettes expose only one green role).",
+
+  "_status_optin_comment": "APPLY THESE ONLY when the user EXPLICITLY asks to theme the status/incident colors (e.g. 'also theme the incident colors', 'make status colors match the palette'). By default leave all eight status keys untouched at their statusline.py defaults so incident severity colors retain their universally-understood meaning (orange=investigating, red=identified, blue=monitoring, etc.). The keys encode Claude service incident severity — recoloring them silently would make the statusline misleading.",
+  "status_optin": {
+    "status_investigating": "peach",
+    "status_identified":    "red",
+    "status_monitoring":    "blue",
+    "status_maintenance":   "sky",
+    "status_default":       "yellow",
+    "status_title":         "muted",
+    "status_count":         "muted",
+    "status_header":        "red"
+  },
+  "_status_optin_note": "status_investigating maps to peach (orange) because 'investigating' is a warning-level state, not yet a confirmed problem. status_identified and status_header both map to red — they are the most severe active states. status_monitoring maps to blue (calm, informational). status_maintenance maps to sky (cyan — scheduled/routine). status_title and status_count are subordinate text and both map to muted."
 }

@@ -20,7 +20,8 @@ verify it actually renders. Work through the steps below in order. **Never run a
 installer or write `settings.json` without explicit user confirmation.**
 
 The repo lives at the root that contains `statusline.py`, `claude_usage.py`,
-`statusline_config.json`, and this skill under `.claude/skills/statusline-install/`.
+`claude_status.py`, `statusline_config.json`, and this skill under
+`.claude/skills/statusline-install/`.
 Refer to that root as `REPO`. This skill bundles:
 
 - `merge_settings.py` — stdlib helper that merges a `statusLine` block into a
@@ -98,6 +99,12 @@ Copy from `REPO` to `DEST`:
 - `statusline.py` — **required**.
 - `claude_usage.py` — **required**. It MUST sit in the **same folder** as
   `statusline.py`; the renderer imports it as a sibling module. Do not split them.
+- `claude_status.py` — **required**. It MUST sit in the **same folder** as
+  `statusline.py`; the renderer imports it as a sibling module when any status
+  placeholder (`{status}`, `{status:N}`, `{status_icon}`, `{status_header}`) is
+  used. Do not split them. At runtime it creates `~/.claude/status_cache.json` to
+  cache the Claude status RSS feed (conditional GET, TTL 120 s); that file is
+  auto-created and gitignored — nothing to configure.
 - `statusline_config.json` — copy **only if `DEST/statusline_config.json` does
   NOT already exist**. If one is there, leave it untouched and tell the user you
   preserved their existing config.
@@ -111,14 +118,14 @@ Per-OS copy examples (adjust `DEST`):
 - bash (macOS/Linux/Git Bash):
   ```sh
   mkdir -p ~/.claude
-  cp "$REPO/statusline.py" "$REPO/claude_usage.py" ~/.claude/
+  cp "$REPO/statusline.py" "$REPO/claude_usage.py" "$REPO/claude_status.py" ~/.claude/
   [ -f ~/.claude/statusline_config.json ] || cp "$REPO/statusline_config.json" ~/.claude/
   ```
 - PowerShell (Windows):
   ```powershell
   $dest = "$env:USERPROFILE\.claude"
   New-Item -ItemType Directory -Force $dest | Out-Null
-  Copy-Item "$REPO\statusline.py","$REPO\claude_usage.py" $dest
+  Copy-Item "$REPO\statusline.py","$REPO\claude_usage.py","$REPO\claude_status.py" $dest
   if (-not (Test-Path "$dest\statusline_config.json")) {
     Copy-Item "$REPO\statusline_config.json" $dest
   }
@@ -317,8 +324,8 @@ picks up the new `settings.json`.
 2. Detect uv / python (≥3.7); pick `LAUNCHER`; offer to install uv only on
    confirmation.
 3. Ask DEST (`~/.claude` recommended) + whether to copy skills globally.
-4. Copy `statusline.py` + `claude_usage.py` (same folder); copy
-   `statusline_config.json` only if absent.
+4. Copy `statusline.py` + `claude_usage.py` + `claude_status.py` (same folder);
+   copy `statusline_config.json` only if absent.
 5. Merge `statusLine` into `settings.json` via `merge_settings.py` using your
    chosen `LAUNCHER` (not hardcoded `uv run`) — forward slashes / `~` only on
    Windows; `.ps1` wrapper if no Git Bash. Confirm the exact command first.

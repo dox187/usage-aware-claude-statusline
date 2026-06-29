@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="890" height="174" viewBox="0 0 890 174" font-family="'Agave Nerd Font','Agave NF','JetBrainsMono Nerd Font',ui-monospace,'Cascadia Code',Consolas,monospace" font-size="26">
+<rect width="890" height="174" rx="14" fill="#0E1116"/>
+<text x="24" y="50.0" xml:space="preserve"><tspan fill="#e06c75" font-weight="700">⚠️ Claude have some issues</tspan></text>
+<text x="24" y="81.7" xml:space="preserve"><tspan fill="#e67e22">🔍</tspan><tspan fill="#C9D2DD">  </tspan><tspan fill="#e67e22">Investigating</tspan><tspan fill="#C9D2DD"> </tspan><tspan fill="#c0c0c0">— Elevated API error rates</tspan></text>
+<text x="24" y="113.4" xml:space="preserve"><tspan fill="#e5c07b">[21:08]</tspan><tspan fill="#C9D2DD"> </tspan><tspan fill="#b8ff75">Opus 4.8</tspan><tspan fill="#61afef">(high)</tspan><tspan fill="#C9D2DD"> Ctx:79.0k </tspan><tspan fill="#ffffff">(42%)</tspan></text>
+<text x="24" y="145.1" xml:space="preserve"><tspan fill="#98c379">C:\Users\you\projects\statusline</tspan><tspan fill="#C9D2DD"> </tspan><tspan fill="#5a6473">(git)/</tspan><tspan fill="#e5c07b">main</tspan><tspan fill="#C9D2DD"> (</tspan><tspan fill="#98c379">+128</tspan><tspan fill="#C9D2DD">,</tspan><tspan fill="#e06c75">-34</tspan><tspan fill="#C9D2DD">)</tspan></text>
+</svg>

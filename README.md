@@ -18,6 +18,7 @@ Most Claude Code status lines show the model and a token count. This one puts yo
 - 🪶 **Zero runtime dependencies.** The status line imports only the Python standard library; weather/usage use `urllib`. The editor is the only piece that needs a package (`textual`).
 - 🌍 **Cross-platform.** macOS, Linux, and Windows (with the documented forward-slash path rule).
 - ☀️ **Weather & sun, optional.** Live conditions via the free [Open-Meteo](https://open-meteo.com) API and a sunrise/sunset glyph — fetched **only** when a visible line actually uses `{weather}` or `{sun}`.
+- 🚦 **Live Claude status, optional.** `{status}` surfaces an active incident from the official [Claude status page](https://status.claude.com) — emoji + label + title, colored by severity — and **auto-hides its whole line** when nothing is wrong. Stdlib only, cached with a conditional GET, fetched **only** when a visible line uses it.
 
 ---
 
@@ -143,6 +144,57 @@ Session info, git, then the full **session + weekly** usage bars with their rese
 ```
 </details>
 
+### Status indicator
+
+A bold banner over the active-incident line. Both lines live entirely in the config but render **only while an incident is active** on the [Claude status page](https://status.claude.com); when all clear, both lines vanish.
+
+![Status indicator: a bold "Claude have some issues" banner above an active-incident line with emoji, label and title](examples/status.svg)
+
+<details><summary><code>examples/status.json</code></summary>
+
+```json
+{
+  "emoji_width": 1,
+  "status": {
+    "show_icon": true,
+    "show_label": true,
+    "show_title": true,
+    "show_count": true,
+    "show_header": true,
+    "include_maintenance": false,
+    "max_len": 48,
+    "max_age_hours": 48,
+    "title": "⚠️ Claude have some issues"
+  },
+  "templates": {
+    "line1": "{status_header}",
+    "line2": "{status}",
+    "line3": "{c.time}[{time}]{r} {c.model}{model}{r}{c.effort}{effort}{r} Ctx:{ctx} {c.ctx_percent}({ctx_percent}%){r}",
+    "line4": "{c.path}{path}{r} {c.git_icon}(git)/{r}{c.branch}{branch}{r} ({c.output}+{added}{r},{c.input}-{removed}{r})"
+  },
+  "colors": {
+    "time": "#E5C07B",
+    "model": "#B8FF75",
+    "effort": "#61AFEF",
+    "ctx_percent": "#ffffff",
+    "path": "#98C379",
+    "git_icon": "#5A6473",
+    "branch": "#E5C07B",
+    "output": "#98C379",
+    "input": "#E06C75",
+    "status_investigating": "#E67E22",
+    "status_identified": "#E06C75",
+    "status_monitoring": "#61AFEF",
+    "status_maintenance": "#56B6C2",
+    "status_default": "#E5C07B",
+    "status_title": "#c0c0c0",
+    "status_count": "#717171",
+    "status_header": "#E06C75"
+  }
+}
+```
+</details>
+
 ---
 
 ## Requirements
@@ -229,6 +281,39 @@ If no token is found, the usage segments simply render empty; the rest of the ba
 - **`ctx_bar_empty`** — glyph for the gauge's unfilled cells (default `░`); any single-column character.
 - **`colors`** — per-key `#RRGGBB` overrides. Omitted keys keep their default; invalid values are ignored.
 
+### Status indicator config
+
+The optional `status` block controls the `{status*}` placeholders, mirroring the `weather` block. It only matters when a visible line uses one of them; otherwise the [Claude status page](https://status.claude.com) is never fetched.
+
+```jsonc
+{
+  "status": {
+    "show_icon": true,            // show the incident emoji in {status}
+    "show_label": true,           // show the status label (Investigating / Identified / Monitoring …)
+    "show_title": true,           // show the incident title
+    "show_count": true,           // show the "(+N)" other-active-incidents hint
+    "show_header": true,          // allow {status_header} to render
+    "include_maintenance": false, // also surface scheduled / in-progress maintenance
+    "max_len": 48,                // global char cap for {status} (0 = unlimited)
+    "max_age_hours": 48,          // only count incidents updated within this many hours (0 = no limit)
+    "title": "⚠️ Claude have some issues"  // banner text for {status_header}
+  }
+}
+```
+
+Incidents are read from `https://status.claude.com/history.rss`, reduced to each incident's **latest** state, and cached in `~/.claude/status_cache.json` with a conditional GET (ETag, 120 s TTL). On any error it falls back to the stale cache, then to nothing — the bar never breaks if the status page is down. Set `CLAUDE_STATUS_UA` to override the request User-Agent. The fetcher also runs standalone: `python claude_status.py` (active incidents as JSON), `--all`, `--maintenance`, `--max-age N`.
+
+**Status color keys** (in `colors`, by the incident's current state): `status_investigating` `#E67E22` → `status_identified` `#E06C75` → `status_monitoring` `#61AFEF` → `status_maintenance` `#56B6C2`, with `status_default` `#E5C07B` for anything else. `{status}`'s title uses `status_title` `#c0c0c0` and the `(+N)` hint uses `status_count` `#717171`; `{status_header}` uses `status_header` `#E06C75`.
+
+**Ready-made lines.** The shipped config includes two disabled status templates:
+
+```jsonc
+"_disabled_status_header": "{status_header}",
+"_disabled_status_line":   "{status}"
+```
+
+Like any `_disabled_*` entry, the renderer ignores them. To switch them on, move their values onto two consecutive `lineN` slots with `{status_header}` directly above `{status}` — e.g. `"line4": "{status_header}"`, `"line5": "{status}"`. Because both render empty when nothing is wrong, you get a two-line block that appears and disappears together with the incident.
+
 ### Template placeholders
 
 | Placeholder | Renders |
@@ -250,9 +335,15 @@ If no token is found, the usage segments simply render empty; the rest of the ba
 | `{compact_usage_micro}` | even more compact usage micro-bars (`s 41%▕▃▏(~3h)  w 63%▕▅▏(~2d)`) |
 | `{path}` `{branch}` `{added}` `{removed}` | current dir / git branch / lines added / removed |
 | `{weather}` `{sun}` | weather string / sunrise-sunset glyph |
+| `{status}` | active Claude incident: emoji + label + title + `(+N)` hint; colored by status; capped at `status.max_len` |
+| `{status:N}` | same but label+title capped at N chars for this line (`0` = unlimited) |
+| `{status_icon}` | incident emoji only |
+| `{status_header}` | bold banner (uses the `status_header` color and `status.title` text); shown only when an incident is active |
 | `{peak_label}` | _legacy, off by default_ — former peak-hour cost indicator. Anthropic [removed Claude Code peak-hour limits on 2026-05-06](https://www.anthropic.com/news/higher-limits-spacex), so this segment is no longer meaningful; the `get_peak_label()` code stays in place, add `{peak_label}` to a line if you still want it. |
 
 **Context-bar color bands** (by token usage): `ctx_bar` (≤150K) → `ctx_bar_mid` (150–250K) → `ctx_bar_high` (250–300K) → `ctx_bar_crit` (300–500K) → `ctx_bar_max` (500K+); the empty track uses `ctx_bar_track`. Flank the bar with `{c.ctx_bracket}▐` … `▌{r}`.
+
+**All four status placeholders render empty — and their whole line is hidden — when no incident is active**, so a dedicated status line appears and disappears on its own. The Claude status RSS feed is fetched **only** when a rendered line actually uses one of `{status}`, `{status:N}`, `{status_icon}`, or `{status_header}`. See [Status indicator config](#status-indicator-config) for how the parts are switched on and colored.
 
 ---
 

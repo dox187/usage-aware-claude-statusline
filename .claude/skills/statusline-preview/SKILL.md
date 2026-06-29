@@ -171,3 +171,43 @@ Useful flags:
 - Empty lines render nothing (the renderer skips blank rows), so a config that
   only defines `line1` produces a single-line preview and a single-line SVG.
 - English only. Standard library only.
+
+## Previewing the status-page indicator (`{status}` / `{status_header}`)
+
+`{status}`, `{status_icon}` and `{status_header}` render EMPTY unless an incident
+is currently active, so a normal preview of a status config shows nothing for
+those lines — the renderer reads the live incident cache at
+`~/.claude/status_cache.json` (refreshing it from status.claude.com only when
+it's stale). To preview them with a *guaranteed* active incident without
+touching the user's real cache, point `HOME`/`USERPROFILE` at a throwaway dir
+that holds a fake cache, then render as usual:
+
+```powershell
+# 1. throwaway home with a fake ACTIVE incident cache (PowerShell)
+$home2 = "$env:TEMP/sl-status-preview"
+New-Item -ItemType Directory -Force "$home2/.claude" | Out-Null
+$now = [int][double]::Parse((Get-Date -UFormat %s))
+@"
+{"ts": $now, "etag": null, "incidents": [
+  {"title": "Elevated API error rates",
+   "link": "https://status.claude.com/incidents/preview-sample",
+   "status": "investigating", "label": "Investigating",
+   "text": "We are investigating elevated error rates on the API.",
+   "when": "preview", "pub_date": "", "pub_ts": $now,
+   "state": "incident", "emoji": "🔍", "updates": 1}]}
+"@ | Set-Content -Encoding utf8 "$home2/.claude/status_cache.json"
+
+# 2. render with HOME/USERPROFILE redirected to the throwaway home
+$env:HOME = $home2; $env:USERPROFILE = $home2
+python F:/ai/statusline/.claude/skills/statusline-preview/render_demo.py --config F:/ai/statusline/examples/status.json --svg F:/ai/statusline/examples/status.svg
+```
+
+This works because `statusline.py` resolves its `STATUS_CACHE` path from the
+home directory at import time — so the override must be set *before* the
+`python` process starts (a subprocess/new shell, not from inside the renderer).
+Keep `ts` fresh (within the 120s cache TTL) so `get_incidents()` returns the
+cache as-is instead of hitting the network, and `pub_ts` fresh so the incident
+passes the config's `max_age_hours` filter. `state` must be `"incident"` (or
+`"maintenance"` with `include_maintenance: true`). The bundled
+`examples/status.svg` was generated exactly this way. The user's real
+`~/.claude/status_cache.json` is never read or written.
